@@ -112,7 +112,14 @@ button:active { transform: scale(0.97); }
 
 <header>
   <h1>EdilCloud</h1>
-  <button class="btn-ghost btn-sm" onclick="loadAll()">Aggiorna</button>
+  <div style="display:flex;gap:6px;align-items:center">
+    <button class="btn-ghost btn-sm" onclick="manualBackup()" title="Scarica backup">Backup</button>
+    <label class="btn-ghost btn-sm" style="cursor:pointer" title="Ripristina backup">
+      Ripristina
+      <input type="file" accept=".json" style="display:none" onchange="restoreBackup(this.files[0])">
+    </label>
+    <button class="btn-ghost btn-sm" onclick="loadAll()">Aggiorna</button>
+  </div>
 </header>
 
 <!-- Stats -->
@@ -352,6 +359,49 @@ let nextId = () => Math.max(0, ...[
   ...db.expenses.map(x=>x.id), ...db.punch.map(x=>x.id)
 ]) + 1;
 
+// ── Auto-Backup ───────────────────────────────────────────────────────────────
+const BACKUP_DATE_KEY = 'construction_co_backup_date';
+
+function autoBackup() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const lastBackup = localStorage.getItem(BACKUP_DATE_KEY);
+    if (lastBackup === today) return; // already backed up today
+    downloadBackup(today);
+    localStorage.setItem(BACKUP_DATE_KEY, today);
+  } catch (e) { console.warn('[Backup] Failed:', e); }
+}
+
+function downloadBackup(dateStr) {
+  const backup = { timestamp: new Date().toISOString(), version: 1, data: db };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `edilcloud_backup_${dateStr || new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function manualBackup() { downloadBackup(new Date().toISOString().split('T')[0]); }
+
+function restoreBackup(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.data || !parsed.data.clients) return alert('File non valido');
+      db = parsed.data;
+      save();
+      loadAll();
+      alert('Backup ripristinato! ✓');
+    } catch (err) { alert('Errore nel ripristinare il backup'); }
+  };
+  reader.readAsText(file);
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 load();
 loadAll();
@@ -366,6 +416,8 @@ function loadAll() {
   if (!document.getElementById('p-date').value) {
     document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
   }
+  // Auto-backup: once per day, silently download JSON backup to Downloads
+  autoBackup();
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────
