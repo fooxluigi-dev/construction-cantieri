@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EdilCloud — Gestione Cantieri</title>
+<style>
+:root {
+  --bg: #f5f4f0; --surface: #ffffff; --border: #e0ddd5;
+  --primary: #2563eb; --primary-hover: #1d4ed8;
+  --danger: #dc2626; --success: #16a34a; --warning: #d97706;
+  --text: #1a1a1a; --text-muted: #6b7280;
+  --radius: 10px; --shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; padding: 12px; }
+
+header { max-width: 1200px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: space-between; }
+h1 { font-size: 20px; font-weight: 700; }
+h2 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+h3 { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-active { background: #dcfce7; color: var(--success); }
+.badge-on_hold { background: #fef3c7; color: var(--warning); }
+.badge-completed { background: #dbeafe; color: var(--primary); }
+.badge-cancelled { background: #f3f4f6; color: var(--text-muted); }
+.badge-pending { background: #fef3c7; color: var(--warning); }
+.badge-sent { background: #dbeafe; color: var(--primary); }
+.badge-paid { background: #dcfce7; color: var(--success); }
+.badge-overdue { background: #fee2e2; color: var(--danger); }
+
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 1200px; margin: 0 auto 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; }
+.stat-card .value { font-size: 22px; font-weight: 700; color: var(--primary); }
+.stat-card .label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.stat-card.warning .value { color: var(--warning); }
+.stat-card.danger .value { color: var(--danger); }
+.stat-card.success .value { color: var(--success); }
+
+.grid { display: grid; grid-template-columns: 1fr; gap: 14px; max-width: 1200px; margin: 0 auto; }
+@media (min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } .stats-row { grid-template-columns: repeat(6, 1fr); } }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 5px 6px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 6px 6px; border-bottom: 1px solid #f0efe9; vertical-align: middle; font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafaf8; }
+.sub-row td { background: #fdfcfb; }
+
+.form-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.form-row > * { flex: 1; min-width: 100px; }
+
+input, select, textarea {
+  padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 13px; font-family: inherit; background: var(--surface);
+  color: var(--text); width: 100%;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+label { font-size: 11px; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 2px; }
+
+button { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; border: none; cursor: pointer; transition: all 0.15s; }
+button:active { transform: scale(0.97); }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg); }
+.btn-sm { padding: 3px 8px; font-size: 11px; }
+
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; padding: 10px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius); padding: 18px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+.modal h2 { margin-bottom: 14px; font-size: 16px; }
+.modal-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 14px; }
+
+.close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1; }
+.close-btn:hover { color: var(--text); }
+
+.punch-list { margin-top: 6px; }
+.punch-item { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; font-size: 12px; background: #fafaf8; margin-bottom: 3px; }
+.punch-item input[type="checkbox"] { width: auto; flex-shrink: 0; }
+.punch-item.done-label { text-decoration: line-through; color: var(--text-muted); }
+.punch-item-actions { margin-left: auto; display: flex; gap: 4px; }
+
+.preventivo-box textarea { width: 100%; height: 180px; font-family: 'Courier New', monospace; font-size: 11px; resize: none; border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+
+.text-muted { color: var(--text-muted); font-size: 11px; }
+.text-right { text-align: right; }
+.mt-6 { margin-top: 6px; }
+.mt-10 { margin-top: 10px; }
+.hidden { display: none; }
+
+.empty-state { text-align: center; padding: 16px; color: var(--text-muted); font-size: 12px; }
+
+.row-actions { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* Mobile tweaks */
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .stat-card .value { font-size: 18px; }
+  th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5) { display: none; } /* hide value col on mobile */
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>EdilCloud</h1>
+  <button class="btn-ghost btn-sm" onclick="loadAll()">Aggiorna</button>
+</header>
+
+<!-- Stats -->
+<div class="stats-row" id="stats-row">
+  <div class="stat-card"><div class="value" id="s-active">0</div><div class="label">Cantieri Attivi</div></div>
+  <div class="stat-card"><div class="value" id="s-completed">0</div><div class="label">Completati</div></div>
+  <div class="stat-card warning"><div class="value" id="s-pending">0</div><div class="label">Fatt. da Inv.</div></div>
+  <div class="stat-card danger"><div class="value" id="s-overdue">0</div><div class="label">Scaduti</div></div>
+  <div class="stat-card danger"><div class="value" id="s-outstanding">€0</div><div class="label">Insoluto</div></div>
+  <div class="stat-card success"><div class="value" id="s-monthly">€0</div><div class="label">Questo Mese</div></div>
+</div>
+
+<div class="grid">
+
+  <div class="card">
+    <div class="section-header"><h2>Cantieri</h2><button class="btn-primary btn-sm" onclick="openModal('job')">+ Cantiere</button></div>
+    <div id="jobs-list"><div class="empty-state">Nessun cantiere ancora</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-header"><h2>Clienti</h2><button class="btn-primary btn-sm" onclick="openModal('client')">+ Cliente</button></div>
+    <div id="clients-list"><div class="empty-state">Nessun cliente ancora</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-header"><h2>Materiali da Ordinare</h2><button class="btn-primary btn-sm" onclick="openModal('material')">+ Materiale</button></div>
+    <div id="materials-list"><div class="empty-state">Tutto a posto!</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-header"><h2>Fatture</h2><button class="btn-primary btn-sm" onclick="openModal('invoice')">+ Fattura</button></div>
+    <div id="invoices-list"><div class="empty-state">Nessuna fattura ancora</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-header"><h2>Spese</h2><button class="btn-primary btn-sm" onclick="openModal('expense')">+ Spesa</button></div>
+    <div id="expenses-list"><div class="empty-state">Nessuna spesa ancora</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-header"><h2>Preventivo</h2></div>
+    <div class="form-row">
+      <div><label>Cliente</label><select id="p-client" onchange="buildPrev()"><option value="">— Seleziona —</option></select></div>
+      <div><label>Cantiere</label><select id="p-job" onchange="buildPrev()"><option value="">— Nessuno —</option></select></div>
+    </div>
+    <div class="form-row">
+      <div><label>Descrizione</label><input id="p-desc" placeholder="Descrizione lavoro..." oninput="buildPrev()"></div>
+      <div><label>Valore (€)</label><input id="p-value" type="number" placeholder="0.00" oninput="buildPrev()"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Validita (gg)</label><input id="p-validity" type="number" value="30" oninput="buildPrev()"></div>
+      <div><label>Data</label><input id="p-date" type="date" oninput="buildPrev()"></div>
+    </div>
+    <div class="preventivo-box">
+      <textarea id="p-output" readonly placeholder="Compila i campi per generare il preventivo..."></textarea>
+    </div>
+    <button class="btn-primary btn-sm mt-6" onclick="copyPrev()" style="width:100%">Copia negli Appunti</button>
+  </div>
+
+</div>
+
+<!-- ── MODALS ── -->
+
+<!-- JOB -->
+<div class="modal-overlay" id="modal-job">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 id="job-title">Nuovo Cantiere</h2><button class="close-btn" onclick="closeModal('job')">&times;</button>
+    </div>
+    <input type="hidden" id="job-id">
+    <div class="form-row">
+      <div><label>Nome Cantiere *</label><input id="job-name" placeholder="es. Ristrutturazione bagno"></div>
+      <div><label>Cliente</label><select id="job-client"><option value="">— Nessuno —</option></select></div>
+    </div>
+    <div style="margin-bottom:6px"><label>Descrizione</label><input id="job-desc" placeholder="Dettagli..."></div>
+    <div class="form-row">
+      <div><label>Stato</label>
+        <select id="job-status">
+          <option value="active">Attivo</option><option value="on_hold">In Attesa</option>
+          <option value="completed">Completato</option><option value="cancelled">Annullato</option>
+        </select>
+      </div>
+      <div><label>Valore (€)</label><input id="job-value" type="number" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Inizio</label><input id="job-start" type="date"></div>
+      <div><label>Fine</label><input id="job-end" type="date"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('job')">Annulla</button>
+      <button class="btn-primary" onclick="saveJob()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 id="client-title">Nuovo Cliente</h2><button class="close-btn" onclick="closeModal('client')">&times;</button>
+    </div>
+    <input type="hidden" id="client-id">
+    <div style="margin-bottom:6px"><label>Nome *</label><input id="client-name" placeholder="Nome cliente"></div>
+    <div class="form-row">
+      <div><label>Telefono</label><input id="client-phone" placeholder="+39 ..."></div>
+      <div><label>Email</label><input id="client-email" placeholder="email@esempio.it"></div>
+    </div>
+    <div style="margin-bottom:6px"><label>Indirizzo</label><input id="client-address" placeholder="Indirizzo"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('client')">Annulla</button>
+      <button class="btn-primary" onclick="saveClient()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MATERIAL -->
+<div class="modal-overlay" id="modal-material">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 id="material-title">Nuovo Materiale</h2><button class="close-btn" onclick="closeModal('material')">&times;</button>
+    </div>
+    <input type="hidden" id="material-id">
+    <div class="form-row">
+      <div><label>Nome *</label><input id="material-name" placeholder="es. Piastrelle ceramiche"></div>
+      <div><label>Cantiere</label><select id="material-job"><option value="">— Generico —</option></select></div>
+    </div>
+    <div class="form-row">
+      <div><label>Quantita</label><input id="material-qty" type="number" step="0.01" value="1"></div>
+      <div><label>Unita</label><input id="material-unit" placeholder="pz, mq, lt" value="pz"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Fornitore</label><input id="material-supplier" placeholder="Fornitore"></div>
+      <div><label>Costo Stim. (€)</label><input id="material-cost" type="number" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('material')">Annulla</button>
+      <button class="btn-primary" onclick="saveMaterial()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVOICE -->
+<div class="modal-overlay" id="modal-invoice">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 id="invoice-title">Nuova Fattura</h2><button class="close-btn" onclick="closeModal('invoice')">&times;</button>
+    </div>
+    <input type="hidden" id="invoice-id">
+    <div class="form-row">
+      <div><label>Numero Fattura</label><input id="invoice-number" placeholder="FAT-001"></div>
+      <div><label>Cliente *</label><select id="invoice-client"><option value="">— Seleziona —</option></select></div>
+    </div>
+    <div class="form-row">
+      <div><label>Cantiere</label><select id="invoice-job"><option value="">— Nessuno —</option></select></div>
+      <div><label>Importo (€) *</label><input id="invoice-amount" type="number" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Data Emissione</label><input id="invoice-issued" type="date"></div>
+      <div><label>Scadenza</label><input id="invoice-due" type="date"></div>
+    </div>
+    <div style="margin-bottom:6px"><label>Stato</label>
+      <select id="invoice-status">
+        <option value="pending">Da Inv.</option><option value="sent">Inviata</option>
+        <option value="paid">Pagata</option><option value="overdue">Scaduta</option>
+      </select>
+    </div>
+    <div style="margin-bottom:6px"><label>Note</label><input id="invoice-notes" placeholder="Termini di pagamento..."></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('invoice')">Annulla</button>
+      <button class="btn-primary" onclick="saveInvoice()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPENSE -->
+<div class="modal-overlay" id="modal-expense">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 id="expense-title">Nuova Spesa</h2><button class="close-btn" onclick="closeModal('expense')">&times;</button>
+    </div>
+    <input type="hidden" id="expense-id">
+    <div class="form-row">
+      <div><label>Descrizione *</label><input id="expense-desc" placeholder="Cosa hai comprato?"></div>
+      <div><label>Cantiere</label><select id="expense-job"><option value="">— Generico —</option></select></div>
+    </div>
+    <div class="form-row">
+      <div><label>Importo (€) *</label><input id="expense-amount" type="number" step="0.01" placeholder="0.00"></div>
+      <div><label>Categoria</label>
+        <select id="expense-category">
+          <option value="material">Materiale</option><option value="tool">Attrezzo</option>
+          <option value="subcontractor">Subappalto</option><option value="transport">Trasporto</option>
+          <option value="permit">Permesso</option><option value="other">Altro</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:6px"><label>Data</label><input id="expense-date" type="date"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('expense')">Annulla</button>
+      <button class="btn-primary" onclick="saveExpense()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- PUNCH ITEM -->
+<div class="modal-overlay" id="modal-punch">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2>Aggiungi Lavoro</h2><button class="close-btn" onclick="closeModal('punch')">&times;</button>
+    </div>
+    <input type="hidden" id="punch-job-id">
+    <div style="margin-bottom:6px"><label>Descrizione *</label><input id="punch-desc" placeholder="es. Sistemare maniglia porta bagno"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('punch')">Annulla</button>
+      <button class="btn-primary" onclick="savePunch()">Aggiungi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data Store ────────────────────────────────────────────────────────────────
+const DB_KEY = 'construction_co_v1';
+let db = { clients: [], jobs: [], materials: [], invoices: [], expenses: [], punch: [] };
+
+function save() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function load() {
+  const s = localStorage.getItem(DB_KEY);
+  if (s) db = JSON.parse(s);
+  // Ensure all arrays exist (migration)
+  ['clients','jobs','materials','invoices','expenses','punch'].forEach(k => {
+    if (!Array.isArray(db[k])) db[k] = [];
+  });
+}
+
+let nextId = () => Math.max(0, ...[
+  ...db.clients.map(x=>x.id), ...db.jobs.map(x=>x.id),
+  ...db.materials.map(x=>x.id), ...db.invoices.map(x=>x.id),
+  ...db.expenses.map(x=>x.id), ...db.punch.map(x=>x.id)
+]) + 1;
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+load();
+loadAll();
+
+function loadAll() {
+  load();
+  renderAll();
+  renderStats();
+  populateSelectors();
+  buildPrev();
+  // Set today on prev date
+  if (!document.getElementById('p-date').value) {
+    document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+  }
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function renderAll() { renderJobs(); renderClients(); renderMaterials(); renderInvoices(); renderExpenses(); }
+
+function renderStats() {
+  const today = new Date(); const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  document.getElementById('s-active').textContent = db.jobs.filter(j=>j.status==='active').length;
+  document.getElementById('s-completed').textContent = db.jobs.filter(j=>j.status==='completed').length;
+  document.getElementById('s-pending').textContent = db.invoices.filter(i=>['pending','sent'].includes(i.status)).length;
+  document.getElementById('s-overdue').textContent = db.invoices.filter(i=>i.status==='overdue').length;
+  const outstanding = db.invoices.filter(i=>['pending','sent','overdue'].includes(i.status)).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+  document.getElementById('s-outstanding').textContent = '€'+outstanding.toLocaleString('it-IT',{minimumFractionDigits:0});
+  const monthly = db.expenses.filter(e=>(e.expense_date||'')>=monthStart).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  document.getElementById('s-monthly').textContent = '€'+monthly.toLocaleString('it-IT',{minimumFractionDigits:0});
+}
+
+function renderJobs() {
+  const el = document.getElementById('jobs-list');
+  if (!db.jobs.length) { el.innerHTML='<div class="empty-state">Nessun cantiere ancora</div>'; return; }
+  let h = `<table><tr><th>Cantiere</th><th>Cliente</th><th>Stato</th><th>Valore</th><th></th></tr>`;
+  db.jobs.forEach(j => {
+    const client = db.clients.find(c=>c.id==j.client_id);
+    const punchCount = db.punch.filter(p=>p.jobId===j.id && !p.done).length;
+    h += `<tr>
+      <td><strong>${esc(j.name)}</strong><br><span class="text-muted">${esc(j.description||'').substring(0,40)}</span></td>
+      <td>${esc(client?.name||'—')}</td>
+      <td><span class="badge badge-${j.status}">${statusLabel(j.status)}</span></td>
+      <td>${j.total_value ? '€'+fmt(j.total_value) : '—'}</td>
+      <td><div class="row-actions">
+        ${punchCount ? `<span style="font-size:10px;color:var(--warning)">${punchCount} da fare</span>` : ''}
+        <button class="btn-sm btn-ghost" onclick="togglePunch(${j.id})">Lavori</button>
+        <button class="btn-sm btn-ghost" onclick="editJob(${j.id})">Modifica</button>
+        <button class="btn-sm btn-danger" onclick="deleteJob(${j.id})">x</button>
+      </div></td>
+    </tr>
+    <tr class="sub-row"><td colspan="5" id="punch-row-${j.id}" class="hidden">
+      <div id="punch-list-${j.id}" class="punch-list"></div>
+      <button class="btn-sm btn-ghost mt-6" onclick="openPunchModal(${j.id})">+ Aggiungi Lavoro</button>
+    </td></tr>`;
+  });
+  h += '</table>';
+  el.innerHTML = h;
+}
+
+function renderClients() {
+  const el = document.getElementById('clients-list');
+  if (!db.clients.length) { el.innerHTML='<div class="empty-state">Nessun cliente ancora</div>'; return; }
+  let h = `<table><tr><th>Nome</th><th>Telefono</th><th></th></tr>`;
+  db.clients.forEach(c => {
+    h += `<tr>
+      <td><strong>${esc(c.name)}</strong></td>
+      <td>${esc(c.phone||'—')}</td>
+      <td class="text-right">
+        <button class="btn-sm btn-ghost" onclick="editClient(${c.id})">Modifica</button>
+        <button class="btn-sm btn-danger" onclick="deleteClient(${c.id})">x</button>
+      </td>
+    </tr>`;
+  });
+  h += '</table>';
+  el.innerHTML = h;
+}
+
+function renderMaterials() {
+  const el = document.getElementById('materials-list');
+  const mats = db.materials.filter(m=>!m.received);
+  if (!mats.length) { el.innerHTML='<div class="empty-state">Tutto a posto!</div>'; return; }
+  let h = `<table><tr><th>Materiale</th><th>Fornitore</th><th>Stimato</th><th>Stato</th><th></th></tr>`;
+  mats.forEach(m => {
+    const job = db.jobs.find(j=>j.id==m.job_id);
+    const status = m.received ? 'badge-paid' : m.ordered ? 'badge-sent' : 'badge-pending';
+    const statusTxt = m.received ? 'Ricevuto' : m.ordered ? 'Ordinato' : 'Da Ordinare';
+    h += `<tr>
+      <td><strong>${esc(m.name)}</strong><br><span class="text-muted">${m.qty} ${esc(m.unit||'')}</span></td>
+      <td>${esc(m.supplier||'—')}</td>
+      <td>${m.cost ? '€'+fmt(m.cost) : '—'}</td>
+      <td><span class="badge ${status}">${statusTxt}</span></td>
+      <td class="text-right">
+        ${!m.ordered&&!m.received ? `<button class="btn-sm btn-ghost" onclick="markOrdered(${m.id})">Ordina</button>` : ''}
+        ${m.ordered&&!m.received ? `<button class="btn-sm btn-success" onclick="markReceived(${m.id})">Ricevuto</button>` : ''}
+        <button class="btn-sm btn-danger" onclick="deleteMaterial(${m.id})">x</button>
+      </td>
+    </tr>`;
+  });
+  h += '</table>';
+  el.innerHTML = h;
+}
+
+function renderInvoices() {
+  const el = document.getElementById('invoices-list');
+  if (!db.invoices.length) { el.innerHTML='<div class="empty-state">Nessuna fattura ancora</div>'; return; }
+  let h = `<table><tr><th>#</th><th>Cliente</th><th>Importo</th><th>Scadenza</th><th>Stato</th><th></th></tr>`;
+  db.invoices.forEach(i => {
+    const client = db.clients.find(c=>c.id==i.client_id);
+    h += `<tr>
+      <td>${esc(i.invoice_number||'#'+i.id)}</td>
+      <td>${esc(client?.name||'—')}</td>
+      <td>€${fmt(i.amount)}</td>
+      <td>${i.due||'—'}</td>
+      <td><span class="badge badge-${i.status}">${statusLabel(i.status)}</span></td>
+      <td class="text-right">
+        <button class="btn-sm btn-ghost" onclick="editInvoice(${i.id})">Modifica</button>
+        <button class="btn-sm btn-danger" onclick="deleteInvoice(${i.id})">x</button>
+      </td>
+    </tr>`;
+  });
+  h += '</table>';
+  el.innerHTML = h;
+}
+
+function renderExpenses() {
+  const el = document.getElementById('expenses-list');
+  if (!db.expenses.length) { el.innerHTML='<div class="empty-state">Nessuna spesa ancora</div>'; return; }
+  let h = `<table><tr><th>Data</th><th>Descrizione</th><th>Importo</th><th></th></tr>`;
+  db.expenses.slice().reverse().forEach(e => {
+    h += `<tr>
+      <td>${e.expense_date||'—'}</td>
+      <td>${esc(e.description)}</td>
+      <td>€${fmt(e.amount)}</td>
+      <td class="text-right">
+        <button class="btn-sm btn-danger" onclick="deleteExpense(${e.id})">x</button>
+      </td>
+    </tr>`;
+  });
+  h += '</table>';
+  el.innerHTML = h;
+}
+
+// ── Populate selectors ───────────────────────────────────────────────────────
+function populateSelectors() {
+  const opts = id => db.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  ['job-client','invoice-client','p-client'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = id==='invoice-client' ? `<option value="">— Seleziona —</option>` : `<option value="">— Nessuno —</option>`;
+    el.innerHTML += opts(id);
+  });
+  const jobOpts = db.jobs.map(j=>`<option value="${j.id}">${esc(j.name)}</option>`).join('');
+  ['invoice-job','material-job','expense-job','p-job'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = `<option value="">— Nessuno —</option>` + jobOpts;
+  });
+}
+
+// ── Punch Items ──────────────────────────────────────────────────────────────
+const openPunch = new Set();
+
+function togglePunch(jobId) {
+  const el = document.getElementById(`punch-row-${jobId}`);
+  if (openPunch.has(jobId)) { openPunch.delete(jobId); el.classList.add('hidden'); return; }
+  openPunch.add(jobId); el.classList.remove('hidden');
+  renderPunchList(jobId);
+}
+
+function renderPunchList(jobId) {
+  const items = db.punch.filter(p=>p.jobId===jobId);
+  const el = document.getElementById(`punch-list-${jobId}`);
+  if (!items.length) { el.innerHTML='<div class="text-muted" style="font-size:11px;padding:4px">Nessun lavoro ancora</div>'; return; }
+  el.innerHTML = items.map(p => `
+    <div class="punch-item ${p.done?'done-label':''}">
+      <input type="checkbox" ${p.done?'checked':''} onchange="togglePunchDone(${p.id},${jobId})">
+      ${esc(p.description)}
+      <div class="punch-item-actions">
+        <button class="btn-sm btn-danger" style="padding:1px 5px" onclick="deletePunch(${p.id},${jobId})">x</button>
+      </div>
+    </div>`).join('');
+}
+
+function openPunchModal(jobId) { document.getElementById('punch-job-id').value=jobId; document.getElementById('punch-desc').value=''; openModal('punch'); }
+function savePunch() {
+  const jobId = parseInt(document.getElementById('punch-job-id').value);
+  const desc = document.getElementById('punch-desc').value.trim();
+  if (!desc) return alert('Descrizione richiesta');
+  db.punch.push({ id:nextId(), jobId, description:desc, done:false });
+  save(); closeModal('punch'); renderPunchList(jobId); renderStats();
+}
+function togglePunchDone(punchId, jobId) {
+  const p = db.punch.find(x=>x.id===punchId); if (p) p.done=!p.done;
+  save(); renderPunchList(jobId); renderStats();
+}
+function deletePunch(punchId, jobId) { db.punch=db.punch.filter(x=>x.id!==punchId); save(); renderPunchList(jobId); renderStats(); }
+
+// ── CRUD Jobs ────────────────────────────────────────────────────────────────
+function saveJob() {
+  const id = parseInt(document.getElementById('job-id').value)||null;
+  const name = document.getElementById('job-name').value.trim();
+  if (!name) return alert('Nome cantiere richiesto');
+  const data = { name, client_id: document.getElementById('job-client').value||null, description: document.getElementById('job-desc').value.trim(), status: document.getElementById('job-status').value, total_value: parseFloat(document.getElementById('job-value').value)||0, start_date: document.getElementById('job-start').value||null, end_date: document.getElementById('job-end').value||null };
+  if (id) { const j=db.jobs.find(x=>x.id===id); Object.assign(j,data); } else { db.jobs.push({id:nextId(),...data}); }
+  save(); closeModal('job'); loadAll();
+}
+function editJob(id) {
+  const j=db.jobs.find(x=>x.id===id);
+  document.getElementById('job-id').value=j.id; document.getElementById('job-title').textContent='Modifica Cantiere';
+  document.getElementById('job-name').value=j.name; document.getElementById('job-client').value=j.client_id||'';
+  document.getElementById('job-desc').value=j.description||''; document.getElementById('job-status').value=j.status;
+  document.getElementById('job-value').value=j.total_value||''; document.getElementById('job-start').value=j.start_date||'';
+  document.getElementById('job-end').value=j.end_date||'';
+  openModal('job');
+}
+function deleteJob(id) { if(!confirm('Eliminare cantiere?'))return; db.jobs=db.jobs.filter(x=>x.id!==id); db.punch=db.punch.filter(x=>x.jobId!==id); save(); loadAll(); }
+
+// ── CRUD Clients ────────────────────────────────────────────────────────────
+function saveClient() {
+  const id = parseInt(document.getElementById('client-id').value)||null;
+  const name = document.getElementById('client-name').value.trim();
+  if (!name) return alert('Nome richiesto');
+  const data = { name, phone: document.getElementById('client-phone').value.trim(), email: document.getElementById('client-email').value.trim(), address: document.getElementById('client-address').value.trim() };
+  if (id) { const c=db.clients.find(x=>x.id===id); Object.assign(c,data); } else { db.clients.push({id:nextId(),...data}); }
+  save(); closeModal('client'); loadAll();
+}
+function editClient(id) {
+  const c=db.clients.find(x=>x.id===id);
+  document.getElementById('client-id').value=c.id; document.getElementById('client-title').textContent='Modifica Cliente';
+  ['name','phone','email','address'].forEach(f => document.getElementById('client-'+f).value=c[f]||'');
+  openModal('client');
+}
+function deleteClient(id) { if(!confirm('Eliminare cliente?'))return; db.clients=db.clients.filter(x=>x.id!==id); save(); loadAll(); }
+
+// ── CRUD Materials ───────────────────────────────────────────────────────────
+function saveMaterial() {
+  const id = parseInt(document.getElementById('material-id').value)||null;
+  const name = document.getElementById('material-name').value.trim();
+  if (!name) return alert('Nome richiesto');
+  const data = { name, job_id: document.getElementById('material-job').value||null, qty: parseFloat(document.getElementById('material-qty').value)||1, unit: document.getElementById('material-unit').value.trim(), supplier: document.getElementById('material-supplier').value.trim(), cost: parseFloat(document.getElementById('material-cost').value)||0, ordered: false, received: false };
+  if (id) { const m=db.materials.find(x=>x.id===id); Object.assign(m,data); } else { db.materials.push({id:nextId(),...data}); }
+  save(); closeModal('material'); loadAll();
+}
+function deleteMaterial(id) { if(!confirm('Delete material?'))return; db.materials=db.materials.filter(x=>x.id!==id); save(); loadAll(); }
+function markOrdered(id) { const m=db.materials.find(x=>x.id===id); m.ordered=true; save(); loadAll(); }
+function markReceived(id) { const m=db.materials.find(x=>x.id===id); m.received=true; save(); loadAll(); }
+
+// ── CRUD Invoices ────────────────────────────────────────────────────────────
+function saveInvoice() {
+  const id = parseInt(document.getElementById('invoice-id').value)||null;
+  const amount = parseFloat(document.getElementById('invoice-amount').value);
+  if (!amount) return alert('Importo richiesto');
+  const data = { invoice_number: document.getElementById('invoice-number').value.trim(), client_id: document.getElementById('invoice-client').value||null, job_id: document.getElementById('invoice-job').value||null, amount, issued: document.getElementById('invoice-issued').value||null, due: document.getElementById('invoice-due').value||null, status: document.getElementById('invoice-status').value, notes: document.getElementById('invoice-notes').value.trim() };
+  if (id) { const i=db.invoices.find(x=>x.id===id); Object.assign(i,data); } else { db.invoices.push({id:nextId(),...data}); }
+  save(); closeModal('invoice'); loadAll();
+}
+function editInvoice(id) {
+  const i=db.invoices.find(x=>x.id===id);
+  document.getElementById('invoice-id').value=i.id; document.getElementById('invoice-title').textContent='Modifica Fattura';
+  document.getElementById('invoice-number').value=i.invoice_number||'';
+  document.getElementById('invoice-client').value=i.client_id||'';
+  document.getElementById('invoice-job').value=i.job_id||'';
+  document.getElementById('invoice-amount').value=i.amount||'';
+  document.getElementById('invoice-issued').value=i.issued||'';
+  document.getElementById('invoice-due').value=i.due||'';
+  document.getElementById('invoice-status').value=i.status;
+  document.getElementById('invoice-notes').value=i.notes||'';
+  openModal('invoice');
+}
+function deleteInvoice(id) { if(!confirm('Eliminare?'))return; db.invoices=db.invoices.filter(x=>x.id!==id); save(); loadAll(); }
+
+// ── CRUD Expenses ────────────────────────────────────────────────────────────
+function saveExpense() {
+  const desc = document.getElementById('expense-desc').value.trim();
+  const amount = parseFloat(document.getElementById('expense-amount').value);
+  if (!desc||!amount) return alert('Descrizione e importo richiesti');
+  const data = { description:desc, job_id: document.getElementById('expense-job').value||null, amount, category: document.getElementById('expense-category').value, expense_date: document.getElementById('expense-date').value||null };
+  db.expenses.push({id:nextId(),...data});
+  save(); closeModal('expense'); loadAll();
+}
+function deleteExpense(id) { if(!confirm('Eliminare?'))return; db.expenses=db.expenses.filter(x=>x.id!==id); save(); loadAll(); }
+
+// ── Preventivo ───────────────────────────────────────────────────────────────
+function buildPrev() {
+  const clientId = document.getElementById('p-client').value;
+  const jobId = document.getElementById('p-job').value;
+  const desc = document.getElementById('p-desc').value.trim();
+  const value = document.getElementById('p-value').value;
+  const validity = document.getElementById('p-validity').value||30;
+  const dateStr = document.getElementById('p-date').value;
+  const client = db.clients.find(c=>c.id==clientId);
+  const job = db.jobs.find(j=>j.id==jobId);
+  if (!desc && !value) { document.getElementById('p-output').value=''; return; }
+  const lines = [
+    '═'.repeat(46), '                PREVENTIVO', '═'.repeat(46),
+    '', `Data:       ${dateStr||'—'}`, `Valido per: ${validity} giorni`, '',
+    client ? `Cliente:    ${client.name}` : 'Cliente:    —',
+    client?.address ? `Indirizzo:  ${client.address}` : '',
+    job ? `Cantiere:  ${job.name}` : '',
+    '', '─'.repeat(46), 'DESCRIZIONE', '─'.repeat(46), desc||'—', '',
+    '─'.repeat(46),
+    `TOTALE (iva esclusa): EUR ${value ? parseFloat(value).toFixed(2) : '0.00'}`,
+    '', 'Pagamento: 30 giorni dalla data fattura', '═'.repeat(46)
+  ].filter(Boolean).join('\n');
+  document.getElementById('p-output').value = lines;
+}
+
+function copyPrev() {
+  const text = document.getElementById('p-output').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.preventivo-box + button');
+    const orig = btn.textContent; btn.textContent='Copiato! ✓';
+    setTimeout(()=>btn.textContent=orig, 1500);
+  });
+}
+
+// ── Modal Helpers ────────────────────────────────────────────────────────────
+function openModal(type) {
+  // Reset all
+  ['job','client','material','invoice','expense','punch'].forEach(t => document.getElementById('modal-'+t).classList.remove('open'));
+  // Reset titles
+  ['job','client','material','invoice','expense'].forEach(t => { const el=document.getElementById(t+'-title'); if(el) el.textContent={'job':'Nuovo Cantiere','client':'Nuovo Cliente','material':'Nuovo Materiale','invoice':'Nuova Fattura','expense':'Nuova Spesa'}[t]; });
+  // Clear IDs
+  ['job-id','client-id','material-id','invoice-id','expense-id'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('modal-'+type).classList.add('open');
+}
+function closeModal(type) { document.getElementById('modal-'+type).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); }));
+
+// ── Utils ────────────────────────────────────────────────────────────────────
+function esc(s) { if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(n) { return parseFloat(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function statusLabel(s) { return ({active:'Attivo',on_hold:'In Attesa',completed:'Completato',cancelled:'Annullato',pending:'Da Inv.',sent:'Inviata',paid:'Pagata',overdue:'Scaduta'})[s]||s; }
+</script>
+</body>
+</html>

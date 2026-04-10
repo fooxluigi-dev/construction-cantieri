@@ -1,0 +1,43 @@
+[Init] Database created at /tmp/construction-saas/construction.db
+[Server] Starting ConstructionCo Micro SaaS on http://localhost:5555
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5555
+ * Running on http://192.168.1.102:5555
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 365-922-154
+127.0.0.1 - - [10/Apr/2026 00:01:21] "POST /api/clients HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:21] "POST /api/jobs HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:21] "POST /api/materials HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:21] "POST /api/invoices HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:21] "POST /api/expenses HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:21] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:21] "GET /api/jobs HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:33] "POST /api/punch-items HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:33] "GET /api/jobs/1/punch-items HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:44] "GET /api/materials HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:44] "GET /api/clients HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:44] "GET /api/expenses HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:44] "GET /api/invoices HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:44] "GET /api/jobs HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:01:44] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:03:12] "GET /api/jobs/1/punch-items HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:07:47] "POST /api/jobs HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:07:47] "GET /api/jobs HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:07:47] "GET /api/invoices HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:07:47] "GET /api/clients HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:07:47] "GET /api/expenses HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:07:47] "GET /api/materials HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:07:47] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:08:28] "DELETE /api/jobs/2 HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:08:28] "DELETE /api/jobs/1 HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:08:28] "DELETE /api/clients/1 HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:08:28] "DELETE /api/materials/1 HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:08:28] "DELETE /api/invoices/1 HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:08:28] "DELETE /api/expenses/1 HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 00:24:38] "GET / HTTP/1.1" 200 -
