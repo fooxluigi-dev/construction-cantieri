@@ -6,7 +6,9 @@ import sqlite3, os, json
 from flask import Flask, request, jsonify, g
 from datetime import datetime, date
 
-DATABASE = '/tmp/construction-saas/construction.db'
+# Vercel-compatible: DB lives next to app.py in deployment directory
+import os
+DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'construction.db')
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
